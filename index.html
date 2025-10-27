@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urania - Calculadora e Acionador da Águas Guariroba</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar com lista de calculadoras -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Calculadoras</h2>
+            <button id="new-calculator-btn" class="btn-new-calc" title="Nova Calculadora">+</button>
+        </div>
+        <div class="calculator-list" id="calculator-list">
+            <!-- Lista de calculadoras será preenchida dinamicamente -->
+        </div>
+    </div>
+
+    <!-- Botão para toggle do sidebar (mobile) -->
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+
+    <div class="container">
+        <!-- Tela Inicial -->
+        <div id="initial-screen" class="screen active">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="form-container">
+                <div class="input-group">
+                    <label for="debit-value">Valor do Débito (R$)</label>
+                    <input type="text" id="debit-value" placeholder="0,00">
+                </div>
+                
+                <div class="input-group">
+                    <label for="days-overdue">Quantidade de Dias em Atraso</label>
+                    <input type="number" id="days-overdue" placeholder="0" min="0">
+                </div>
+                
+                <div class="button-group">
+                    <button id="cash-button" class="btn btn-primary">À Vista</button>
+                    <button id="installment-button" class="btn btn-secondary">Parcelado</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Desconto -->
+        <div id="discount-screen" class="screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="discount-container">
+                <div class="info-display">
+                    <div class="info-item">
+                        <span class="label">Valor do Débito:</span>
+                        <span id="display-debit-value" class="value">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="label">Dias de Atraso:</span>
+                        <span id="display-days-overdue" class="value">0 dias</span>
+                    </div>
+                </div>
+                
+                <div class="discount-control">
+                    <label for="discount-slider">Desconto: <span id="discount-percentage">0%</span></label>
+                    <input type="range" id="discount-slider" min="0" max="100" value="0" class="slider">
+                </div>
+                
+                <div class="calculation-results">
+                    <div class="result-item">
+                        <span class="label">Valor a Pagar com Desconto:</span>
+                        <span id="final-value" class="value highlight">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="label">Valor do Desconto:</span>
+                        <span id="discount-value" class="value">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="action-button" class="btn btn-action">Acionamento</button>
+                    <button id="back-button" class="btn btn-secondary">Voltar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Parcelamento -->
+        <div id="installment-screen" class="screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="installment-container">
+                <div class="info-display">
+                    <div class="info-item">
+                        <span class="label">Valor do Débito:</span>
+                        <span id="installment-debit-value" class="value">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="label">Dias de Atraso:</span>
+                        <span id="installment-days-overdue" class="value">0 dias</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="label">Desconto:</span>
+                        <span id="installment-discount-percentage" class="value">0%</span>
+                    </div>
+                </div>
+                
+                <div class="discount-control">
+                    <label for="installment-discount-slider">Desconto: <span id="installment-discount-text">0%</span></label>
+                    <input type="range" id="installment-discount-slider" min="0" max="100" value="0" class="slider">
+                </div>
+                
+                <div class="calculation-results">
+                    <div class="result-item">
+                        <span class="label">Valor a Pagar:</span>
+                        <span id="installment-final-value" class="value highlight">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="label">Valor do Desconto:</span>
+                        <span id="installment-discount-value" class="value">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="label">Entrada Mínima (10%):</span>
+                        <span id="installment-min-entry" class="value">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span class="label">Entrada Sugerida (30%):</span>
+                        <span id="installment-suggested-entry" class="value">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="input-group">
+                        <label for="installment-matriculation-status">Situação da Matrícula</label>
+                        <select id="installment-matriculation-status" class="select-input">
+                            <option value="ativa">Ativa</option>
+                            <option value="inativa">Inativa</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-matriculation-number">Número da Matrícula</label>
+                        <input type="text" id="installment-matriculation-number" placeholder="Número da matrícula">
+                    </div>
+                    
+                    <div class="radio-group">
+                        <label class="radio-label">Tipo de Documento:</label>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="installment-document-type" value="cpf" checked>
+                                <span class="radio-text">CPF</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="installment-document-type" value="cnpj">
+                                <span class="radio-text">CNPJ</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-document-number" id="installment-document-label">CPF</label>
+                        <input type="text" id="installment-document-number" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-holder-name">Titular</label>
+                        <input type="text" id="installment-holder-name" placeholder="Nome do titular">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="entry-value">Valor da Entrada</label>
+                        <input type="text" id="entry-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-number">Número de Parcelas</label>
+                        <div class="installment-input-group">
+                            <input type="number" id="installment-number" placeholder="2" min="2" max="120" step="2">
+                            <select id="installment-select" class="select-input">
+                                <option value="">Ou selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="calculation-results">
+                        <div class="result-item">
+                            <span class="label">Valor da Parcela:</span>
+                            <span id="installment-amount" class="value highlight">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-due-date">Vencimento</label>
+                        <div class="date-input-group">
+                            <input type="text" id="installment-due-date" placeholder="DD/MM/AAAA" maxlength="10">
+                            <button type="button" id="installment-select-date-btn" class="btn btn-date">Selecionar Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-contact-method">Enviar pelo WhatsApp/E-mail</label>
+                        <input type="text" id="installment-contact-method" placeholder="WhatsApp ou E-mail">
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="installment-action-button" class="btn btn-action">Copiar Acionamento</button>
+                    <button id="installment-back-button" class="btn btn-secondary">Voltar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Acionamento À Vista -->
+        <div id="action-screen" class="screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="action-container">
+                <div class="summary-info">
+                    <div class="summary-item">
+                        <span class="label">Valor do Débito Original:</span>
+                        <span id="summary-original-value" class="value">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <span class="label">Valor Proposto:</span>
+                        <span id="summary-proposed-value" class="value highlight">R$ 0,00</span>
+                    </div>
+                    
+                    <div class="summary-item">
+                        <span class="label">Desconto Aplicado:</span>
+                        <span id="summary-discount-value" class="value">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="input-group">
+                        <label for="matriculation-status">Situação da Matrícula</label>
+                        <select id="matriculation-status" class="select-input">
+                            <option value="ativa">Ativa</option>
+                            <option value="inativa">Inativa</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="matriculation-number">Número da Matrícula</label>
+                        <input type="text" id="matriculation-number" placeholder="Número da matrícula">
+                    </div>
+                    
+                    <div class="radio-group">
+                        <label class="radio-label">Tipo de Documento:</label>
+                        <div class="radio-options">
+                            <label class="radio-option">
+                                <input type="radio" name="document-type" value="cpf" checked>
+                                <span class="radio-text">CPF</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="document-type" value="cnpj">
+                                <span class="radio-text">CNPJ</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="document-number" id="document-label">CPF</label>
+                        <input type="text" id="document-number" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="holder-name">Titular</label>
+                        <input type="text" id="holder-name" placeholder="Nome do titular">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="updated-value">Valor Atualizado</label>
+                        <input type="text" id="updated-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="due-date">Vencimento</label>
+                        <div class="date-input-group">
+                            <input type="text" id="due-date" placeholder="DD/MM/AAAA" maxlength="10">
+                            <button type="button" id="select-date-btn" class="btn btn-date">Selecionar Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="contact-method">Enviar pelo WhatsApp/E-mail</label>
+                        <input type="text" id="contact-method" placeholder="WhatsApp ou E-mail">
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="copy-action-btn" class="btn btn-action">Copiar Acionamento</button>
+                    <button id="back-to-discount-btn" class="btn btn-secondary">Voltar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

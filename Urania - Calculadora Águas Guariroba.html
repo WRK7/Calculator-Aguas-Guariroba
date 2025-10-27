@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urania - Calculadora e Acionador da Águas Guariroba</title>
+    <link rel="icon" type="image/x-icon" href="unnamed.ico">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen {
+            display: none;
+            padding: 40px;
+            min-height: 400px;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .project-name {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .project-description {
+            font-size: 1rem;
+            color: #cccccc;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .input-group input::placeholder {
+            color: #888888;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #666666, #444444);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 102, 102, 0.4);
+        }
+
+        .btn-action {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            min-height: 50px;
+        }
+
+        .btn-back {
+            background: linear-gradient(45deg, #666666, #444444);
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            min-height: 50px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 102, 102, 0.4);
+        }
+
+        /* Estilos para remover setas dos inputs numéricos */
+        input[type="number"] {
+            appearance: textfield;
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Tela de desconto */
+        .discount-container {
+            text-align: center;
+        }
+
+        .info-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item h3 {
+            margin: 0 0 10px 0;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-item p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .discount-control {
+            margin: 30px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .calculation-results {
+            margin-top: 30px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #00d4ff;
+        }
+
+        /* Tela de acionamento */
+        .action-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .summary-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .select-input option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .radio-group {
+            margin-bottom: 20px;
+        }
+
+        .radio-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .radio-options {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            margin-right: 8px;
+            accent-color: #00d4ff;
+        }
+
+        .radio-text {
+            color: #ffffff;
+            font-size: 1rem;
+        }
+
+        .date-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .date-input-group input {
+            flex: 1;
+        }
+
+        .btn-date {
+            padding: 15px 20px;
+            background: linear-gradient(45deg, #666666, #444444);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            min-height: 50px;
+        }
+
+        .btn-date:hover {
+            background: linear-gradient(45deg, #777777, #555555);
+        }
+
+        /* Calendário */
+        .calendar-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .calendar-container {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 300px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            color: #00d4ff;
+            margin: 0;
+        }
+
+        .calendar-close {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .calendar-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav-btn {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .calendar-month-year {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            color: #888888;
+            font-weight: 600;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            color: #444444;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.disabled:hover {
+            background: none;
+        }
+
+        /* Validação */
+        .invalid {
+            border-color: #ff6b6b !important;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.3) !important;
+        }
+
+        .valid {
+            border-color: #51cf66 !important;
+            box-shadow: 0 0 10px rgba(81, 207, 102, 0.3) !important;
+        }
+
+        /* Tela de parcelamento */
+        .installment-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .installment-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .installment-input-group.full-width {
+            grid-template-columns: 1fr;
+        }
+
+        /* Sidebar */
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-new-calc {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 45px;
+        }
+
+        .btn-new-calc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .calculator-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .calculator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calculator-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .calculator-item.active {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .calculator-info {
+            flex: 1;
+        }
+
+        .calculator-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .calculator-subtitle {
+            font-size: 0.8rem;
+            color: #888888;
+        }
+
+        .btn-delete-calc {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-delete-calc:hover {
+            background: #ff5252;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        /* Responsivo */
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .info-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .installment-input-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="btn-new-calc" id="new-calculator-btn">+ Nova Calculadora</button>
+        </div>
+        <div class="calculator-list" id="calculator-list">
+            <!-- Lista de calculadoras será gerada dinamicamente -->
+        </div>
+    </div>
+
+    <!-- Toggle para mobile -->
+    <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+
+    <!-- Container principal -->
+    <div class="container">
+        <!-- Tela inicial -->
+        <div class="screen active" id="initial-screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="input-group">
+                <label for="debit-value">Valor do Débito (R$)</label>
+                <input type="text" id="debit-value" placeholder="0,00">
+            </div>
+            
+            <div class="input-group">
+                <label for="days-overdue">Quantidade de Dias em Atraso</label>
+                <input type="number" id="days-overdue" placeholder="0" min="0">
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-primary" id="cash-button">À Vista</button>
+                <button class="btn btn-secondary" id="installment-button">Parcelado</button>
+            </div>
+        </div>
+
+        <!-- Tela de desconto -->
+        <div class="screen" id="discount-screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="discount-container">
+                <div class="info-display">
+                    <div class="info-item">
+                        <h3>Valor do Débito</h3>
+                        <p id="display-debit-value">R$ 0,00</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Dias de Atraso</h3>
+                        <p id="display-days-overdue">0 dias</p>
+                    </div>
+                </div>
+                
+                <div class="discount-control">
+                    <h3>Desconto: <span id="discount-percentage">0%</span></h3>
+                    <input type="range" class="slider" id="discount-slider" min="0" max="100" value="0">
+                </div>
+                
+                <div class="calculation-results">
+                    <div class="result-item">
+                        <span>Valor a pagar com desconto:</span>
+                        <span id="final-value">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Valor do desconto:</span>
+                        <span id="discount-value">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <button class="btn btn-action" id="action-button">Acionamento</button>
+                <button class="btn btn-back" id="back-button">Voltar</button>
+            </div>
+        </div>
+
+        <!-- Tela de acionamento -->
+        <div class="screen" id="action-screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="action-container">
+                <div class="summary-info">
+                    <div class="summary-item">
+                        <span>Valor Original:</span>
+                        <span id="summary-original-value">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Valor Proposto:</span>
+                        <span id="summary-proposed-value">R$ 0,00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Desconto Aplicado:</span>
+                        <span id="summary-discount-value">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Informações do Cliente</h3>
+                    
+                    <div class="input-group">
+                        <label for="matriculation-status">Situação da Matrícula</label>
+                        <select class="select-input" id="matriculation-status">
+                            <option value="ativa">Ativa</option>
+                            <option value="inativa">Inativa</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="matriculation-number">Número da Matrícula</label>
+                        <input type="text" id="matriculation-number" placeholder="Digite o número da matrícula">
+                    </div>
+                    
+                    <div class="radio-group">
+                        <label class="radio-label">Tipo de Documento</label>
+                        <div class="radio-options">
+                            <div class="radio-option">
+                                <input type="radio" name="document-type" value="cpf" id="cpf-radio" checked>
+                                <label class="radio-text" for="cpf-radio">CPF</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="document-type" value="cnpj" id="cnpj-radio">
+                                <label class="radio-text" for="cnpj-radio">CNPJ</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="document-number" id="document-label">CPF</label>
+                        <input type="text" id="document-number" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="holder-name">Titular</label>
+                        <input type="text" id="holder-name" placeholder="Nome do titular">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="updated-value">Valor Atualizado (R$)</label>
+                        <input type="text" id="updated-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="negotiated-value">Valor Negociado (R$)</label>
+                        <input type="text" id="negotiated-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="due-date">Vencimento</label>
+                        <div class="date-input-group">
+                            <input type="text" id="due-date" placeholder="DD/MM/AAAA">
+                            <button class="btn-date" id="select-date-btn">Selecionar Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="contact-method">Enviar pelo WhatsApp/E-mail</label>
+                        <input type="text" id="contact-method" placeholder="WhatsApp ou e-mail">
+                    </div>
+                </div>
+                
+                <button class="btn btn-action" id="copy-action-btn">Copiar Acionamento</button>
+                <button class="btn btn-back" id="back-to-discount-btn">Voltar</button>
+            </div>
+        </div>
+
+        <!-- Tela de parcelamento -->
+        <div class="screen" id="installment-screen">
+            <div class="header">
+                <h1 class="project-name">Urania</h1>
+                <p class="project-description">Calculadora e Acionador da Águas Guariroba</p>
+            </div>
+            
+            <div class="installment-container">
+                <div class="info-display">
+                    <div class="info-item">
+                        <h3>Valor do Débito</h3>
+                        <p id="installment-debit-value">R$ 0,00</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Dias de Atraso</h3>
+                        <p id="installment-days-overdue">0 dias</p>
+                    </div>
+                    <div class="info-item">
+                        <h3>Desconto</h3>
+                        <p id="installment-discount-percentage">0%</p>
+                    </div>
+                </div>
+                
+                <div class="discount-control">
+                    <h3>Desconto: <span id="installment-discount-text">0%</span></h3>
+                    <input type="range" class="slider" id="installment-discount-slider" min="0" max="100" value="0">
+                </div>
+                
+                <div class="calculation-results">
+                    <div class="result-item">
+                        <span>Valor a pagar:</span>
+                        <span id="installment-final-value">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Valor do desconto:</span>
+                        <span id="installment-discount-value">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Entrada mínima de 10%:</span>
+                        <span id="installment-min-entry">R$ 0,00</span>
+                    </div>
+                    <div class="result-item">
+                        <span>Entrada sugerida de 30%:</span>
+                        <span id="installment-suggested-entry">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Informações do Parcelamento</h3>
+                    
+                    <div class="installment-input-group">
+                        <div class="input-group">
+                            <label for="entry-value">Valor da Entrada</label>
+                            <input type="text" id="entry-value" placeholder="0,00">
+                        </div>
+                        <div class="input-group">
+                            <label for="installment-number">Número de Parcelas</label>
+                            <input type="number" id="installment-number" placeholder="2" min="2" max="120" step="2">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-select">Ou selecione:</label>
+                        <select class="select-input" id="installment-select">
+                            <option value="">Ou selecione...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="result-item">
+                        <span>Valor da parcela:</span>
+                        <span id="installment-amount">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Informações do Cliente</h3>
+                    
+                    <div class="input-group">
+                        <label for="installment-matriculation-status">Situação da Matrícula</label>
+                        <select class="select-input" id="installment-matriculation-status">
+                            <option value="ativa">Ativa</option>
+                            <option value="inativa">Inativa</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-matriculation-number">Número da Matrícula</label>
+                        <input type="text" id="installment-matriculation-number" placeholder="Digite o número da matrícula">
+                    </div>
+                    
+                    <div class="radio-group">
+                        <label class="radio-label">Tipo de Documento</label>
+                        <div class="radio-options">
+                            <div class="radio-option">
+                                <input type="radio" name="installment-document-type" value="cpf" id="installment-cpf-radio" checked>
+                                <label class="radio-text" for="installment-cpf-radio">CPF</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="installment-document-type" value="cnpj" id="installment-cnpj-radio">
+                                <label class="radio-text" for="installment-cnpj-radio">CNPJ</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-document-number" id="installment-document-label">CPF</label>
+                        <input type="text" id="installment-document-number" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-holder-name">Titular</label>
+                        <input type="text" id="installment-holder-name" placeholder="Nome do titular">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-updated-value">Valor Atualizado (R$)</label>
+                        <input type="text" id="installment-updated-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-negotiated-value">Valor Negociado (R$)</label>
+                        <input type="text" id="installment-negotiated-value" placeholder="0,00">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-due-date">Vencimento</label>
+                        <div class="date-input-group">
+                            <input type="text" id="installment-due-date" placeholder="DD/MM/AAAA">
+                            <button class="btn-date" id="installment-select-date-btn">Selecionar Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="installment-contact-method">Enviar pelo WhatsApp/E-mail</label>
+                        <input type="text" id="installment-contact-method" placeholder="WhatsApp ou e-mail">
+                    </div>
+                </div>
+                
+                <button class="btn btn-action" id="installment-action-button">Copiar Acionamento</button>
+                <button class="btn btn-back" id="installment-back-button">Voltar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SISTEMA DE MÚLTIPLAS CALCULADORAS
+        let calculators = [];
+        let currentCalculatorId = null;
+        let calculatorIdCounter = 1;
+
+        // Elementos do Sidebar
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const newCalculatorBtn = document.getElementById('new-calculator-btn');
+        const calculatorList = document.getElementById('calculator-list');
+
+        // Elementos DOM
+        const initialScreen = document.getElementById('initial-screen');
+        const discountScreen = document.getElementById('discount-screen');
+        const installmentScreen = document.getElementById('installment-screen');
+        const actionScreen = document.getElementById('action-screen');
+        const debitValueInput = document.getElementById('debit-value');
+        const daysOverdueInput = document.getElementById('days-overdue');
+        const cashButton = document.getElementById('cash-button');
+        const installmentButton = document.getElementById('installment-button');
+        const backButton = document.getElementById('back-button');
+        const actionButton = document.getElementById('action-button');
+        const backToDiscountBtn = document.getElementById('back-to-discount-btn');
+        const copyActionBtn = document.getElementById('copy-action-btn');
+
+        // Elementos da tela de desconto
+        const displayDebitValue = document.getElementById('display-debit-value');
+        const displayDaysOverdue = document.getElementById('display-days-overdue');
+        const discountSlider = document.getElementById('discount-slider');
+        const discountPercentage = document.getElementById('discount-percentage');
+        const finalValue = document.getElementById('final-value');
+        const discountValue = document.getElementById('discount-value');
+        const negotiatedValue = document.getElementById('negotiated-value');
+
+        // Elementos da tela de acionamento
+        const summaryOriginalValue = document.getElementById('summary-original-value');
+        const summaryProposedValue = document.getElementById('summary-proposed-value');
+        const summaryDiscountValue = document.getElementById('summary-discount-value');
+        const matriculationStatus = document.getElementById('matriculation-status');
+        const matriculationNumber = document.getElementById('matriculation-number');
+        const documentTypeRadios = document.querySelectorAll('input[name="document-type"]');
+        const documentLabel = document.getElementById('document-label');
+        const documentNumber = document.getElementById('document-number');
+        const holderName = document.getElementById('holder-name');
+        const updatedValue = document.getElementById('updated-value');
+        const dueDate = document.getElementById('due-date');
+        const selectDateBtn = document.getElementById('select-date-btn');
+        const contactMethod = document.getElementById('contact-method');
+
+        // Elementos da tela de parcelamento
+        const installmentDebitValue = document.getElementById('installment-debit-value');
+        const installmentDaysOverdue = document.getElementById('installment-days-overdue');
+        const installmentDiscountPercentage = document.getElementById('installment-discount-percentage');
+        const installmentDiscountSlider = document.getElementById('installment-discount-slider');
+        const installmentDiscountText = document.getElementById('installment-discount-text');
+        const installmentFinalValue = document.getElementById('installment-final-value');
+        const installmentDiscountValue = document.getElementById('installment-discount-value');
+        const installmentMinEntry = document.getElementById('installment-min-entry');
+        const installmentSuggestedEntry = document.getElementById('installment-suggested-entry');
+        const installmentMatriculationStatus = document.getElementById('installment-matriculation-status');
+        const installmentMatriculationNumber = document.getElementById('installment-matriculation-number');
+        const installmentDocumentTypeRadios = document.querySelectorAll('input[name="installment-document-type"]');
+        const installmentDocumentLabel = document.getElementById('installment-document-label');
+        const installmentDocumentNumber = document.getElementById('installment-document-number');
+        const installmentHolderName = document.getElementById('installment-holder-name');
+        const installmentUpdatedValue = document.getElementById('installment-updated-value');
+        const entryValue = document.getElementById('entry-value');
+        const installmentNumber = document.getElementById('installment-number');
+        const installmentSelect = document.getElementById('installment-select');
+        const installmentAmount = document.getElementById('installment-amount');
+        const installmentDueDate = document.getElementById('installment-due-date');
+        const installmentSelectDateBtn = document.getElementById('installment-select-date-btn');
+        const installmentContactMethod = document.getElementById('installment-contact-method');
+        const installmentActionButton = document.getElementById('installment-action-button');
+        const installmentBackButton = document.getElementById('installment-back-button');
+        const installmentNegotiatedValue = document.getElementById('installment-negotiated-value');
+
+        // Variáveis globais
+        let currentDebitValue = 0;
+        let currentDaysOverdue = 0;
+        let currentDiscount = 0;
+        let currentInstallmentDiscount = 0;
+        let currentFinalValue = 0;
+        let currentNegotiatedValue = 0;
+        let currentInstallmentNegotiatedValue = 0;
+
+        // Função para formatar valores monetários
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        // Função para calcular desconto À VISTA baseado nos dias de atraso
+        function calculateDiscountPercentage(days) {
+            if (days <= 120) return 0;
+            if (days <= 180) return 15;
+            if (days <= 365) return 30;
+            if (days <= 730) return 50;
+            if (days <= 1095) return 60;
+            if (days <= 1460) return 70;
+            if (days <= 1825) return 80;
+            return 95;
+        }
+
+        // Função para calcular desconto PARCELADO baseado nos dias de atraso
+        function calculateInstallmentDiscountPercentage(days) {
+            if (days <= 180) return 0;
+            if (days <= 365) return 10;
+            if (days <= 730) return 25;
+            if (days <= 1095) return 35;
+            if (days <= 1460) return 45;
+            if (days <= 1825) return 55;
+            return 75;
+        }
+
+        // Função para obter o limite máximo de desconto À VISTA baseado nos dias
+        function getMaxDiscount(days) {
+            if (days <= 120) return 0;
+            if (days <= 180) return 15;
+            if (days <= 365) return 30;
+            if (days <= 730) return 50;
+            if (days <= 1095) return 60;
+            if (days <= 1460) return 70;
+            if (days <= 1825) return 80;
+            return 95;
+        }
+
+        // Função para obter o limite máximo de desconto PARCELADO baseado nos dias
+        function getMaxInstallmentDiscount(days) {
+            if (days <= 180) return 0;
+            if (days <= 365) return 10;
+            if (days <= 730) return 25;
+            if (days <= 1095) return 35;
+            if (days <= 1460) return 45;
+            if (days <= 1825) return 55;
+            return 75;
+        }
+
+        // Função para obter número máximo de parcelas baseado nos dias
+        function getMaxInstallments(days) {
+            if (days <= 90) return 24;
+            if (days <= 180) return 36;
+            if (days <= 365) return 48;
+            return 60;
+        }
+
+        // Função para atualizar os cálculos
+        function updateCalculations() {
+            const discountAmount = (currentDebitValue * currentDiscount) / 100;
+            const finalAmount = currentDebitValue - discountAmount;
+            
+            finalValue.textContent = formatCurrency(finalAmount);
+            discountValue.textContent = formatCurrency(discountAmount);
+        }
+
+        // Função para mostrar tela de desconto
+        function showDiscountScreen() {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            // Converter valor formatado de volta para número
+            let debitValueStr = debitValueInput.value.replace(/\./g, '').replace(',', '.');
+            const debitValue = parseFloat(debitValueStr) || 0;
+            const daysOverdue = parseInt(daysOverdueInput.value) || 0;
+            
+            if (debitValue <= 0) {
+                alert('Por favor, insira um valor de débito válido.');
+                return;
+            }
+            
+            // Armazenar valores
+            currentDebitValue = debitValue;
+            currentDaysOverdue = daysOverdue;
+            
+            // Obter limite máximo de desconto baseado nos dias
+            const maxDiscount = getMaxDiscount(daysOverdue);
+            
+            // Calcular desconto sugerido baseado nos dias de atraso
+            const suggestedDiscount = calculateDiscountPercentage(daysOverdue);
+            currentDiscount = suggestedDiscount;
+            
+            // Atualizar slider com os limites corretos
+            discountSlider.min = 0;
+            discountSlider.max = maxDiscount;
+            discountSlider.value = suggestedDiscount;
+            
+            // Atualizar exibição
+            displayDebitValue.textContent = formatCurrency(debitValue);
+            displayDaysOverdue.textContent = `${daysOverdue} dias`;
+            discountPercentage.textContent = `${suggestedDiscount}%`;
+            
+            // Atualizar cálculos
+            updateCalculations();
+            
+            // Trocar telas
+            initialScreen.classList.remove('active');
+            discountScreen.classList.add('active');
+        }
+
+        // Função para voltar à tela inicial
+        function showInitialScreen() {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            initialScreen.classList.add('active');
+            discountScreen.classList.remove('active');
+        }
+
+        // Event Listeners
+        cashButton.addEventListener('click', showDiscountScreen);
+
+        installmentButton.addEventListener('click', () => {
+            showInstallmentScreen();
+        });
+
+        backButton.addEventListener('click', showInitialScreen);
+
+        // Slider de desconto
+        discountSlider.addEventListener('input', (e) => {
+            currentDiscount = parseInt(e.target.value);
+            discountPercentage.textContent = `${currentDiscount}%`;
+            updateCalculations();
+        });
+
+        // Botão de acionamento
+        actionButton.addEventListener('click', () => {
+            showActionScreen();
+        });
+
+        // Função para mostrar tela de acionamento
+        function showActionScreen() {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            // Obter valores específicos da calculadora atual
+            const calcValues = getCurrentCalculatorValues();
+            if (!calcValues) return;
+            
+            const debitValue = calcValues.currentDebitValue;
+            const discount = calcValues.currentDiscount;
+            const finalAmount = debitValue - (debitValue * discount / 100);
+            const discountAmount = debitValue - finalAmount;
+            
+            // Atualizar informações do resumo
+            summaryOriginalValue.textContent = formatCurrency(debitValue);
+            summaryProposedValue.textContent = formatCurrency(finalAmount);
+            summaryDiscountValue.textContent = formatCurrency(discountAmount);
+            
+            // Preencher automaticamente o campo de valor negociado com o valor após desconto
+            negotiatedValue.value = finalAmount.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            // Trocar telas
+            discountScreen.classList.remove('active');
+            actionScreen.classList.add('active');
+        }
+
+        // Botão voltar da tela de acionamento
+        backToDiscountBtn.addEventListener('click', () => {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            actionScreen.classList.remove('active');
+            discountScreen.classList.add('active');
+        });
+
+        // FUNÇÕES DA TELA DE PARCELAMENTO
+
+        // Função para mostrar tela de parcelamento
+        function showInstallmentScreen() {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            // Converter valor formatado de volta para número
+            let debitValueStr = debitValueInput.value.replace(/\./g, '').replace(',', '.');
+            const debitValue = parseFloat(debitValueStr) || 0;
+            const daysOverdue = parseInt(daysOverdueInput.value) || 0;
+            
+            if (debitValue <= 0) {
+                alert('Por favor, insira um valor de débito válido.');
+                return;
+            }
+            
+            // Armazenar valores
+            currentDebitValue = debitValue;
+            currentDaysOverdue = daysOverdue;
+            
+            // Obter limite máximo de desconto PARCELADO baseado nos dias
+            const maxInstallmentDiscount = getMaxInstallmentDiscount(daysOverdue);
+            const suggestedInstallmentDiscount = calculateInstallmentDiscountPercentage(daysOverdue);
+            currentInstallmentDiscount = suggestedInstallmentDiscount;
+            
+            // Obter número máximo de parcelas baseado nos dias
+            const maxInstallments = getMaxInstallments(daysOverdue);
+            
+            // Atualizar slider com os limites corretos
+            installmentDiscountSlider.min = 0;
+            installmentDiscountSlider.max = maxInstallmentDiscount;
+            installmentDiscountSlider.value = suggestedInstallmentDiscount;
+            
+            // Atualizar exibição
+            installmentDebitValue.textContent = formatCurrency(debitValue);
+            installmentDaysOverdue.textContent = `${daysOverdue} dias`;
+            installmentDiscountPercentage.textContent = `${suggestedInstallmentDiscount}%`;
+            installmentDiscountText.textContent = `${suggestedInstallmentDiscount}%`;
+            
+            // Popular o select de parcelas baseado no máximo permitido
+            installmentSelect.innerHTML = '<option value="">Ou selecione...</option>';
+            for (let i = 2; i <= maxInstallments; i += 2) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i}x`;
+                installmentSelect.appendChild(option);
+            }
+            
+            // Atualizar cálculos
+            updateInstallmentCalculations();
+            
+            // Trocar telas
+            initialScreen.classList.remove('active');
+            installmentScreen.classList.add('active');
+        }
+
+        // Função para atualizar os cálculos de parcelamento
+        function updateInstallmentCalculations() {
+            const discountAmount = (currentDebitValue * currentInstallmentDiscount) / 100;
+            const finalAmount = currentDebitValue - discountAmount;
+            const minEntry = finalAmount * 0.10;
+            const suggestedEntry = finalAmount * 0.30;
+            
+            currentFinalValue = finalAmount;
+            
+            installmentFinalValue.textContent = formatCurrency(finalAmount);
+            installmentDiscountValue.textContent = formatCurrency(discountAmount);
+            installmentMinEntry.textContent = formatCurrency(minEntry);
+            installmentSuggestedEntry.textContent = formatCurrency(suggestedEntry);
+            
+            // Atualizar valor da parcela se houver entrada e número de parcelas
+            calculateInstallmentAmount();
+        }
+
+        // Função para calcular valor da parcela
+        function calculateInstallmentAmount() {
+            let entryValueNum = 0;
+            if (entryValue.value) {
+                entryValueNum = parseFloat(entryValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            const numParcelas = parseInt(installmentNumber.value) || 0;
+            
+            // Usar valor negociado se preenchido, senão usar valor calculado
+            let finalValueToUse = currentFinalValue;
+            if (installmentNegotiatedValue.value) {
+                finalValueToUse = parseFloat(installmentNegotiatedValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            if (entryValueNum > 0 && numParcelas > 0) {
+                const remainingValue = finalValueToUse - entryValueNum;
+                if (remainingValue > 0) {
+                    const parcelaValue = remainingValue / numParcelas;
+                    installmentAmount.textContent = formatCurrency(parcelaValue);
+                } else {
+                    installmentAmount.textContent = 'R$ 0,00';
+                }
+            } else {
+                installmentAmount.textContent = 'R$ 0,00';
+            }
+        }
+
+        // Event listeners da tela de parcelamento
+        installmentDiscountSlider.addEventListener('input', (e) => {
+            currentInstallmentDiscount = parseInt(e.target.value);
+            installmentDiscountText.textContent = `${currentInstallmentDiscount}%`;
+            installmentDiscountPercentage.textContent = `${currentInstallmentDiscount}%`;
+            updateInstallmentCalculations();
+        });
+
+        // Formatação do valor da entrada
+        entryValue.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                calculateInstallmentAmount();
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            calculateInstallmentAmount();
+        });
+
+        // Formatação do valor atualizado (parcelado)
+        installmentUpdatedValue.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        });
+
+        // Formatação automática do valor negociado (parcelado)
+        installmentNegotiatedValue.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                currentInstallmentNegotiatedValue = 0;
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            currentInstallmentNegotiatedValue = numericValue;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        });
+
+        // Sincronizar input e select de parcelas
+        installmentNumber.addEventListener('input', (e) => {
+            installmentSelect.value = '';
+            calculateInstallmentAmount();
+        });
+
+        installmentSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                installmentNumber.value = e.target.value;
+                calculateInstallmentAmount();
+            }
+        });
+
+        // Botão voltar da tela de parcelamento
+        installmentBackButton.addEventListener('click', () => {
+            // Salvar estado atual antes de navegar
+            saveCurrentCalculator();
+            
+            installmentScreen.classList.remove('active');
+            initialScreen.classList.add('active');
+        });
+
+        // Event listeners para CPF/CNPJ na tela de parcelamento
+        installmentDocumentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'cpf') {
+                    installmentDocumentLabel.textContent = 'CPF';
+                    installmentDocumentNumber.placeholder = '000.000.000-00';
+                    installmentDocumentNumber.maxLength = 14;
+                } else {
+                    installmentDocumentLabel.textContent = 'CNPJ';
+                    installmentDocumentNumber.placeholder = '00.000.000/0000-00';
+                    installmentDocumentNumber.maxLength = 18;
+                }
+                installmentDocumentNumber.value = '';
+            });
+        });
+
+        // Formatação de CPF/CNPJ na tela de parcelamento
+        installmentDocumentNumber.addEventListener('input', (e) => {
+            const documentType = document.querySelector('input[name="installment-document-type"]:checked').value;
+            if (documentType === 'cpf') {
+                e.target.value = formatCPF(e.target.value);
+            } else {
+                e.target.value = formatCNPJ(e.target.value);
+            }
+        });
+
+        installmentDocumentNumber.addEventListener('blur', (e) => {
+            const documentType = document.querySelector('input[name="installment-document-type"]:checked').value;
+            const value = e.target.value;
+            
+            if (value.trim() === '') {
+                e.target.classList.remove('invalid', 'valid');
+                return;
+            }
+            
+            let isValid = false;
+            if (documentType === 'cpf') {
+                isValid = isValidCPF(value);
+            } else {
+                isValid = isValidCNPJ(value);
+            }
+            
+            if (isValid) {
+                e.target.classList.remove('invalid');
+                e.target.classList.add('valid');
+            } else {
+                e.target.classList.remove('valid');
+                e.target.classList.add('invalid');
+            }
+        });
+
+        // Formatação de data na tela de parcelamento
+        installmentDueDate.addEventListener('input', (e) => {
+            e.target.value = formatDate(e.target.value);
+        });
+
+        installmentDueDate.addEventListener('blur', (e) => {
+            if (e.target.value && !isValidDate(e.target.value)) {
+                alert('Data inválida! Por favor, insira uma data válida no formato DD/MM/AAAA dentro dos próximos 60 dias.');
+                e.target.value = '';
+            }
+        });
+
+        // Calendário para tela de parcelamento
+        installmentSelectDateBtn.addEventListener('click', () => {
+            createCalendarForInstallment();
+        });
+
+        // Função para criar calendário para parcelamento
+        function createCalendarForInstallment() {
+            const modal = document.createElement('div');
+            modal.className = 'calendar-modal';
+            modal.innerHTML = `
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <h3 class="calendar-title">Selecionar Data</h3>
+                        <button class="calendar-close">&times;</button>
+                    </div>
+                    <div class="calendar-navigation">
+                        <button id="prev-month-inst" class="calendar-nav-btn">&lt;</button>
+                        <span id="current-month-year-inst" class="calendar-month-year"></span>
+                        <button id="next-month-inst" class="calendar-nav-btn">&gt;</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid-inst">
+                        <div class="calendar-day-header">Dom</div>
+                        <div class="calendar-day-header">Seg</div>
+                        <div class="calendar-day-header">Ter</div>
+                        <div class="calendar-day-header">Qua</div>
+                        <div class="calendar-day-header">Qui</div>
+                        <div class="calendar-day-header">Sex</div>
+                        <div class="calendar-day-header">Sáb</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            
+            const monthNames = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            
+            function updateCalendar() {
+                const grid = modal.querySelector('#calendar-grid-inst');
+                const monthYear = modal.querySelector('#current-month-year-inst');
+                
+                const headers = grid.querySelectorAll('.calendar-day-header');
+                grid.innerHTML = '';
+                headers.forEach(header => grid.appendChild(header));
+                
+                monthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startDay = firstDay.getDay();
+                
+                const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+                
+                for (let i = 0; i < startDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day disabled';
+                    grid.appendChild(emptyDay);
+                }
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    const dayDate = new Date(currentYear, currentMonth, day);
+                    
+                    // Permitir apenas dias do mês atual que não estejam no passado
+                    const isBeforeToday = dayDate < todayDate;
+                    const isDisabled = !isCurrentMonth || isBeforeToday;
+                    
+                    if (isDisabled) {
+                        dayElement.className = 'calendar-day disabled';
+                    } else {
+                        dayElement.className = 'calendar-day';
+                        dayElement.addEventListener('click', () => {
+                            const selectedDate = `${day.toString().padStart(2, '0')}/${(currentMonth + 1).toString().padStart(2, '0')}/${currentYear}`;
+                            installmentDueDate.value = selectedDate;
+                            document.body.removeChild(modal);
+                        });
+                    }
+                    
+                    dayElement.textContent = day;
+                    grid.appendChild(dayElement);
+                }
+            }
+            
+            modal.querySelector('#prev-month-inst').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            modal.querySelector('#next-month-inst').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+            
+            modal.querySelector('.calendar-close').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+            
+            updateCalendar();
+            modal.style.display = 'flex';
+        }
+
+        // Função para gerar texto do acionamento de parcelamento
+        function generateInstallmentActionText() {
+            // Obter valores específicos da calculadora atual
+            const calcValues = getCurrentCalculatorValues();
+            if (!calcValues) return '';
+            
+            const originalValue = formatCurrency(calcValues.currentDebitValue);
+            const discountPercentage = calcValues.currentInstallmentDiscount;
+            
+            // Usar valor atualizado
+            let updatedValueNum = currentFinalValue;
+            if (installmentUpdatedValue.value) {
+                updatedValueNum = parseFloat(installmentUpdatedValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            // Usar valor negociado
+            let negotiatedValueNum = currentFinalValue;
+            if (installmentNegotiatedValue.value) {
+                negotiatedValueNum = parseFloat(installmentNegotiatedValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            const updatedValueFormatted = formatCurrency(updatedValueNum);
+            const negotiatedValueFormatted = formatCurrency(negotiatedValueNum);
+            
+            let entryValueNum = 0;
+            if (entryValue.value) {
+                entryValueNum = parseFloat(entryValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            const entryValueFormatted = formatCurrency(entryValueNum);
+            
+            const numParcelas = parseInt(installmentNumber.value) || 0;
+            
+            let parcelaValue = 0;
+            if (entryValueNum > 0 && numParcelas > 0) {
+                const remainingValue = negotiatedValueNum - entryValueNum;
+                if (remainingValue > 0) {
+                    parcelaValue = remainingValue / numParcelas;
+                }
+            }
+            const parcelaValueFormatted = formatCurrency(parcelaValue);
+            
+            const matriculation = installmentMatriculationStatus.value;
+            const matriculationNum = installmentMatriculationNumber.value;
+            const documentType = document.querySelector('input[name="installment-document-type"]:checked').value;
+            const documentNum = installmentDocumentNumber.value;
+            const holder = installmentHolderName.value;
+            const due = installmentDueDate.value;
+            const contact = installmentContactMethod.value;
+            
+            const matriculationText = matriculation === 'ativa' ? 'MATRICULA ATIVA' : 'MATRICULA INATIVA';
+            
+            return `PORTES ADV. ASSESSORIA DE COBRANCA
+UNIDADE: AGUAS GUARIROBA
+TITULAR: ${holder.toUpperCase()}
+${documentType.toUpperCase()}: ${documentNum}
+${matriculationText}: ${matriculationNum}
+VALOR ORIGINAL: ${originalValue}
+DESCONTO: ${discountPercentage}%
+VALOR ATUALIZADO: ${updatedValueFormatted}
+VALOR NEGOCIADO: ${negotiatedValueFormatted}
+ENTRADA: ${entryValueFormatted}
+NUMERO DE PARCELAS: ${numParcelas}x
+VALOR DA PARCELA: ${parcelaValueFormatted}
+VENCIMENTO: ${due}
+ENVIAR PELO WHATS/E-MAIL: ${contact}
+
+---
+Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
+        }
+
+        // Botão de copiar acionamento de parcelamento
+        installmentActionButton.addEventListener('click', () => {
+            try {
+                // Validar todos os campos obrigatórios
+                if (!validateInstallmentFields()) {
+                    alert('❌ Por favor, preencha todos os campos obrigatórios destacados em vermelho!');
+                    return;
+                }
+                
+                // Validar CPF/CNPJ
+                const documentType = document.querySelector('input[name="installment-document-type"]:checked').value;
+                const docValue = installmentDocumentNumber.value.trim();
+                
+                let isDocValid = false;
+                if (documentType === 'cpf') {
+                    isDocValid = isValidCPF(docValue);
+                } else {
+                    isDocValid = isValidCNPJ(docValue);
+                }
+                
+                if (!isDocValid) {
+                    alert('❌ ' + documentType.toUpperCase() + ' inválido! Por favor, verifique.');
+                    installmentDocumentNumber.classList.add('invalid');
+                    installmentDocumentNumber.focus();
+                    return;
+                }
+                
+                // Validar data
+                if (!isValidDate(installmentDueDate.value)) {
+                    alert('❌ Data de vencimento inválida!');
+                    installmentDueDate.classList.add('invalid');
+                    installmentDueDate.focus();
+                    return;
+                }
+                
+                const actionText = generateInstallmentActionText();
+                
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(actionText).then(() => {
+                        alert('✅ Acionamento copiado para a área de transferência!');
+                    }).catch((err) => {
+                        console.error('Erro ao copiar:', err);
+                        fallbackCopy(actionText);
+                    });
+                } else {
+                    fallbackCopy(actionText);
+                }
+            } catch (error) {
+                console.error('Erro ao gerar acionamento:', error);
+                alert('❌ Erro ao gerar acionamento. Verifique se todos os campos estão preenchidos.');
+            }
+        });
+
+        // Formatação automática do valor do débito
+        debitValueInput.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        });
+
+        // Formatação automática do valor negociado (à vista)
+        negotiatedValue.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                currentNegotiatedValue = 0;
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            currentNegotiatedValue = numericValue;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        });
+
+        // Validação dos inputs
+        debitValueInput.addEventListener('blur', (e) => {
+            if (e.target.value && parseFloat(e.target.value) < 0) {
+                e.target.value = '0.00';
+            }
+        });
+
+        daysOverdueInput.addEventListener('blur', (e) => {
+            if (e.target.value && parseInt(e.target.value) < 0) {
+                e.target.value = '0';
+            }
+        });
+
+        // Enter para confirmar na tela inicial
+        debitValueInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                showDiscountScreen();
+            }
+        });
+
+        daysOverdueInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                showDiscountScreen();
+            }
+        });
+
+        // Funções de formatação de CPF/CNPJ
+        function formatCPF(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        }
+
+        function formatCNPJ(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{2})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1/$2')
+                .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        }
+
+        // Função para validar CPF
+        function isValidCPF(cpf) {
+            cpf = cpf.replace(/\D/g, '');
+            
+            if (cpf.length !== 11) return false;
+            if (/^(\d)\1{10}$/.test(cpf)) return false; // Todos os dígitos iguais
+            
+            let sum = 0;
+            let remainder;
+            
+            for (let i = 1; i <= 9; i++) {
+                sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            }
+            
+            remainder = (sum * 10) % 11;
+            if (remainder === 10 || remainder === 11) remainder = 0;
+            if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+            
+            sum = 0;
+            for (let i = 1; i <= 10; i++) {
+                sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            }
+            
+            remainder = (sum * 10) % 11;
+            if (remainder === 10 || remainder === 11) remainder = 0;
+            if (remainder !== parseInt(cpf.substring(10, 11))) return false;
+            
+            return true;
+        }
+
+        // Função para validar CNPJ
+        function isValidCNPJ(cnpj) {
+            cnpj = cnpj.replace(/\D/g, '');
+            
+            if (cnpj.length !== 14) return false;
+            if (/^(\d)\1{13}$/.test(cnpj)) return false; // Todos os dígitos iguais
+            
+            let length = cnpj.length - 2;
+            let numbers = cnpj.substring(0, length);
+            let digits = cnpj.substring(length);
+            let sum = 0;
+            let pos = length - 7;
+            
+            for (let i = length; i >= 1; i--) {
+                sum += numbers.charAt(length - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            
+            let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+            if (result != digits.charAt(0)) return false;
+            
+            length = length + 1;
+            numbers = cnpj.substring(0, length);
+            sum = 0;
+            pos = length - 7;
+            
+            for (let i = length; i >= 1; i--) {
+                sum += numbers.charAt(length - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            
+            result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+            if (result != digits.charAt(1)) return false;
+            
+            return true;
+        }
+
+        // Função para validar campos obrigatórios da tela à vista
+        function validateActionFields() {
+            let isValid = true;
+            const fields = [
+                { element: matriculationNumber, name: 'Número da Matrícula' },
+                { element: documentNumber, name: 'CPF/CNPJ' },
+                { element: holderName, name: 'Titular' },
+                { element: updatedValue, name: 'Valor Atualizado' },
+                { element: negotiatedValue, name: 'Valor Negociado' },
+                { element: dueDate, name: 'Vencimento' },
+                { element: contactMethod, name: 'WhatsApp/E-mail' }
+            ];
+            
+            fields.forEach(field => {
+                if (!field.element.value.trim()) {
+                    field.element.classList.add('invalid');
+                    isValid = false;
+                } else {
+                    field.element.classList.remove('invalid');
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Função para validar campos obrigatórios da tela de parcelamento
+        function validateInstallmentFields() {
+            let isValid = true;
+            const fields = [
+                { element: installmentMatriculationNumber, name: 'Número da Matrícula' },
+                { element: installmentDocumentNumber, name: 'CPF/CNPJ' },
+                { element: installmentHolderName, name: 'Titular' },
+                { element: installmentUpdatedValue, name: 'Valor Atualizado' },
+                { element: installmentNegotiatedValue, name: 'Valor Negociado' },
+                { element: entryValue, name: 'Valor da Entrada' },
+                { element: installmentNumber, name: 'Número de Parcelas' },
+                { element: installmentDueDate, name: 'Vencimento' },
+                { element: installmentContactMethod, name: 'WhatsApp/E-mail' }
+            ];
+            
+            fields.forEach(field => {
+                if (!field.element.value.trim()) {
+                    field.element.classList.add('invalid');
+                    isValid = false;
+                } else {
+                    field.element.classList.remove('invalid');
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Função para formatar data
+        function formatDate(value) {
+            return value
+                .replace(/\D/g, '')
+                .replace(/(\d{2})(\d)/, '$1/$2')
+                .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+        }
+
+        // Função para validar data (manual permite até 60 dias)
+        function isValidDate(dateString) {
+            const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            const match = dateString.match(regex);
+            
+            if (!match) return false;
+            
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10);
+            const year = parseInt(match[3], 10);
+            
+            if (month < 1 || month > 12) return false;
+            if (day < 1 || day > 31) return false;
+            
+            const date = new Date(year, month - 1, day);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Calcular limite de 60 dias para digitação manual
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + 60);
+            
+            // Verificar se a data está no passado
+            if (date < today) return false;
+            
+            // Verificar se a data está além de 60 dias
+            if (date > maxDate) return false;
+            
+            // Verificar se a data é válida
+            if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) return false;
+            
+            return true;
+        }
+
+        // Função para criar calendário com todos os meses
+        function createCalendar() {
+            const modal = document.createElement('div');
+            modal.className = 'calendar-modal';
+            modal.innerHTML = `
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <h3 class="calendar-title">Selecionar Data</h3>
+                        <button class="calendar-close">&times;</button>
+                    </div>
+                    <div class="calendar-navigation">
+                        <button id="prev-month" class="calendar-nav-btn">&lt;</button>
+                        <span id="current-month-year" class="calendar-month-year"></span>
+                        <button id="next-month" class="calendar-nav-btn">&gt;</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid">
+                        <div class="calendar-day-header">Dom</div>
+                        <div class="calendar-day-header">Seg</div>
+                        <div class="calendar-day-header">Ter</div>
+                        <div class="calendar-day-header">Qua</div>
+                        <div class="calendar-day-header">Qui</div>
+                        <div class="calendar-day-header">Sex</div>
+                        <div class="calendar-day-header">Sáb</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            
+            const monthNames = [
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+            ];
+            
+            function updateCalendar() {
+                const grid = modal.querySelector('#calendar-grid');
+                const monthYear = modal.querySelector('#current-month-year');
+                
+                // Limpar grid (manter apenas headers)
+                const headers = grid.querySelectorAll('.calendar-day-header');
+                grid.innerHTML = '';
+                headers.forEach(header => grid.appendChild(header));
+                
+                // Atualizar título
+                monthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startDay = firstDay.getDay();
+                
+                const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+                
+                // Adicionar dias vazios no início
+                for (let i = 0; i < startDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day disabled';
+                    grid.appendChild(emptyDay);
+                }
+                
+                // Adicionar dias do mês
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    const dayDate = new Date(currentYear, currentMonth, day);
+                    
+                    // Permitir apenas dias do mês atual que não estejam no passado
+                    const isBeforeToday = dayDate < todayDate;
+                    const isDisabled = !isCurrentMonth || isBeforeToday;
+                    
+                    if (isDisabled) {
+                        dayElement.className = 'calendar-day disabled';
+                    } else {
+                        dayElement.className = 'calendar-day';
+                        dayElement.addEventListener('click', () => {
+                            const selectedDate = `${day.toString().padStart(2, '0')}/${(currentMonth + 1).toString().padStart(2, '0')}/${currentYear}`;
+                            dueDate.value = selectedDate;
+                            document.body.removeChild(modal);
+                        });
+                    }
+                    
+                    dayElement.textContent = day;
+                    grid.appendChild(dayElement);
+                }
+            }
+            
+            // Event listeners de navegação
+            modal.querySelector('#prev-month').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar();
+            });
+            
+            modal.querySelector('#next-month').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar();
+            });
+            
+            // Event listeners
+            modal.querySelector('.calendar-close').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+            
+            // Inicializar calendário
+            updateCalendar();
+            modal.style.display = 'flex';
+        }
+
+        // Função para gerar texto do acionamento
+        function generateActionText() {
+            // Obter valores específicos da calculadora atual
+            const calcValues = getCurrentCalculatorValues();
+            if (!calcValues) return '';
+            
+            const originalValue = formatCurrency(calcValues.currentDebitValue);
+            
+            // Usar valor atualizado
+            let updatedValueNum = 0;
+            if (updatedValue.value) {
+                updatedValueNum = parseFloat(updatedValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            // Usar valor negociado
+            let negotiatedValueNum = 0;
+            if (negotiatedValue.value) {
+                negotiatedValueNum = parseFloat(negotiatedValue.value.replace(/\./g, '').replace(',', '.'));
+            }
+            
+            const updatedValueFormatted = formatCurrency(updatedValueNum);
+            const negotiatedValueFormatted = formatCurrency(negotiatedValueNum);
+            // Usar o desconto aplicado na tela de desconto em vez de calcular baseado no valor digitado
+            const discountPercentage = calcValues.currentDiscount;
+            const matriculation = matriculationStatus.value;
+            const matriculationNum = matriculationNumber.value;
+            const documentType = document.querySelector('input[name="document-type"]:checked').value;
+            const documentNum = documentNumber.value;
+            const holder = holderName.value;
+            const due = dueDate.value;
+            const contact = contactMethod.value;
+            
+            // Determinar o status da matrícula
+            const matriculationText = matriculation === 'ativa' ? 'MATRICULA ATIVA' : 'MATRICULA INATIVA';
+            
+            return `PORTES ADV. ASSESSORIA DE COBRANCA
+UNIDADE: AGUAS GUARIROBA
+TITULAR: ${holder.toUpperCase()}
+${documentType.toUpperCase()}: ${documentNum}
+${matriculationText}: ${matriculationNum}
+VALOR ORIGINAL: ${originalValue}
+DESCONTO: ${discountPercentage}%
+VALOR ATUALIZADO: ${updatedValueFormatted}
+VALOR NEGOCIADO: ${negotiatedValueFormatted}
+VENCIMENTO: ${due}
+ENVIAR PELO WHATS/E-MAIL: ${contact}
+
+---
+Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
+        }
+
+        // Event listeners da tela de acionamento
+        documentTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'cpf') {
+                    documentLabel.textContent = 'CPF';
+                    documentNumber.placeholder = '000.000.000-00';
+                    documentNumber.maxLength = 14;
+                } else {
+                    documentLabel.textContent = 'CNPJ';
+                    documentNumber.placeholder = '00.000.000/0000-00';
+                    documentNumber.maxLength = 18;
+                }
+                documentNumber.value = '';
+            });
+        });
+
+        documentNumber.addEventListener('input', (e) => {
+            const documentType = document.querySelector('input[name="document-type"]:checked').value;
+            if (documentType === 'cpf') {
+                e.target.value = formatCPF(e.target.value);
+            } else {
+                e.target.value = formatCNPJ(e.target.value);
+            }
+        });
+
+        documentNumber.addEventListener('blur', (e) => {
+            const documentType = document.querySelector('input[name="document-type"]:checked').value;
+            const value = e.target.value;
+            
+            if (value.trim() === '') {
+                e.target.classList.remove('invalid', 'valid');
+                return;
+            }
+            
+            let isValid = false;
+            if (documentType === 'cpf') {
+                isValid = isValidCPF(value);
+            } else {
+                isValid = isValidCNPJ(value);
+            }
+            
+            if (isValid) {
+                e.target.classList.remove('invalid');
+                e.target.classList.add('valid');
+            } else {
+                e.target.classList.remove('valid');
+                e.target.classList.add('invalid');
+            }
+        });
+
+        dueDate.addEventListener('input', (e) => {
+            e.target.value = formatDate(e.target.value);
+        });
+
+        dueDate.addEventListener('blur', (e) => {
+            if (e.target.value && !isValidDate(e.target.value)) {
+                alert('Data inválida! Por favor, insira uma data válida no formato DD/MM/AAAA dentro dos próximos 60 dias.');
+                e.target.value = '';
+            }
+        });
+
+        selectDateBtn.addEventListener('click', createCalendar);
+
+        // Formatação do valor atualizado
+        updatedValue.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            
+            // Remover tudo que não for número
+            value = value.replace(/\D/g, '');
+            
+            // Se estiver vazio, limpar o campo
+            if (!value) {
+                e.target.value = '';
+                return;
+            }
+            
+            // Converter para número (dividir por 100 para ter centavos)
+            let numericValue = parseFloat(value) / 100;
+            
+            // Formatar com separadores de milhar
+            e.target.value = numericValue.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        });
+
+        copyActionBtn.addEventListener('click', () => {
+            try {
+                // Validar todos os campos obrigatórios
+                if (!validateActionFields()) {
+                    alert('❌ Por favor, preencha todos os campos obrigatórios destacados em vermelho!');
+                    return;
+                }
+                
+                // Validar CPF/CNPJ
+                const documentType = document.querySelector('input[name="document-type"]:checked').value;
+                const docValue = documentNumber.value.trim();
+                
+                let isDocValid = false;
+                if (documentType === 'cpf') {
+                    isDocValid = isValidCPF(docValue);
+                } else {
+                    isDocValid = isValidCNPJ(docValue);
+                }
+                
+                if (!isDocValid) {
+                    alert('❌ ' + documentType.toUpperCase() + ' inválido! Por favor, verifique.');
+                    documentNumber.classList.add('invalid');
+                    documentNumber.focus();
+                    return;
+                }
+                
+                // Validar data
+                if (!isValidDate(dueDate.value)) {
+                    alert('❌ Data de vencimento inválida!');
+                    dueDate.classList.add('invalid');
+                    dueDate.focus();
+                    return;
+                }
+                
+                const actionText = generateActionText();
+                
+                // Tentar copiar usando a API moderna
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(actionText).then(() => {
+                        alert('✅ Acionamento copiado para a área de transferência!');
+                    }).catch((err) => {
+                        console.error('Erro ao copiar:', err);
+                        fallbackCopy(actionText);
+                    });
+                } else {
+                    // Usar fallback
+                    fallbackCopy(actionText);
+                }
+            } catch (error) {
+                console.error('Erro ao gerar acionamento:', error);
+                alert('❌ Erro ao gerar acionamento. Verifique se todos os campos estão preenchidos.');
+            }
+        });
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('✅ Acionamento copiado para a área de transferência!');
+                } else {
+                    alert('❌ Não foi possível copiar. Por favor, copie manualmente:\n\n' + text);
+                }
+            } catch (err) {
+                console.error('Erro no fallback:', err);
+                alert('❌ Não foi possível copiar. Por favor, copie manualmente:\n\n' + text);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // FUNÇÕES DO SISTEMA DE MÚLTIPLAS CALCULADORAS
+
+        // Criar nova calculadora
+        function createNewCalculator() {
+            // Salvar a calculadora atual antes de criar nova
+            if (currentCalculatorId) {
+                saveCurrentCalculator();
+            }
+            
+            const calculator = {
+                id: calculatorIdCounter++,
+                name: `Calculadora ${calculatorIdCounter - 1}`,
+                createdAt: new Date().toLocaleString('pt-BR'),
+                data: {
+                    debitValue: '',
+                    daysOverdue: '',
+                    currentScreen: 'initial',
+                    currentDebitValue: 0,
+                    currentDaysOverdue: 0,
+                    currentDiscount: 0,
+                    currentInstallmentDiscount: 0,
+                    currentFinalValue: 0,
+                    currentNegotiatedValue: 0,
+                    currentInstallmentNegotiatedValue: 0
+                }
+            };
+            
+            calculators.push(calculator);
+            currentCalculatorId = calculator.id;
+            
+            // Limpar campos e voltar para tela inicial
+            clearAllFields();
+            resetGlobalVariables();
+            showScreen('initial');
+            
+            renderCalculatorList();
+            
+            return calculator;
+        }
+
+        // Deletar calculadora
+        function deleteCalculator(id) {
+            if (calculators.length === 1) {
+                alert('Você precisa ter pelo menos uma calculadora!');
+                return;
+            }
+            
+            const index = calculators.findIndex(c => c.id === id);
+            if (index === -1) return;
+            
+            calculators.splice(index, 1);
+            
+            // Se deletou a ativa, ativa outra
+            if (currentCalculatorId === id) {
+                currentCalculatorId = calculators[0].id;
+                loadCalculator(currentCalculatorId);
+            }
+            
+            renderCalculatorList();
+        }
+
+        // Salvar estado da calculadora atual
+        function saveCurrentCalculator() {
+            const calculator = calculators.find(c => c.id === currentCalculatorId);
+            if (!calculator) return;
+            
+            // Salvar dados básicos
+            calculator.data.debitValue = debitValueInput.value;
+            calculator.data.daysOverdue = daysOverdueInput.value;
+            calculator.data.currentScreen = getCurrentScreen();
+            
+            // Salvar valores específicos da calculadora
+            calculator.data.currentDebitValue = currentDebitValue;
+            calculator.data.currentDaysOverdue = currentDaysOverdue;
+            calculator.data.currentDiscount = currentDiscount;
+            calculator.data.currentInstallmentDiscount = currentInstallmentDiscount;
+            calculator.data.currentFinalValue = currentFinalValue;
+            calculator.data.currentNegotiatedValue = currentNegotiatedValue;
+            calculator.data.currentInstallmentNegotiatedValue = currentInstallmentNegotiatedValue;
+            
+            calculator.data.negotiatedValue = negotiatedValue.value;
+            calculator.data.installmentNegotiatedValue = installmentNegotiatedValue.value;
+            
+            // Salvar dados específicos da tela atual
+            if (getCurrentScreen() === 'action') {
+                calculator.data.matriculationStatus = matriculationStatus.value;
+                calculator.data.matriculationNumber = matriculationNumber.value;
+                calculator.data.documentType = document.querySelector('input[name="document-type"]:checked')?.value || 'cpf';
+                calculator.data.documentNumber = documentNumber.value;
+                calculator.data.holderName = holderName.value;
+                calculator.data.updatedValue = updatedValue.value;
+                calculator.data.dueDate = dueDate.value;
+                calculator.data.contactMethod = contactMethod.value;
+            } else if (getCurrentScreen() === 'installment') {
+                calculator.data.installmentMatriculationStatus = installmentMatriculationStatus.value;
+                calculator.data.installmentMatriculationNumber = installmentMatriculationNumber.value;
+                calculator.data.installmentDocumentType = document.querySelector('input[name="installment-document-type"]:checked')?.value || 'cpf';
+                calculator.data.installmentDocumentNumber = installmentDocumentNumber.value;
+                calculator.data.installmentHolderName = installmentHolderName.value;
+                calculator.data.installmentUpdatedValue = installmentUpdatedValue.value;
+                calculator.data.entryValue = entryValue.value;
+                calculator.data.installmentNumber = installmentNumber.value;
+                calculator.data.installmentDueDate = installmentDueDate.value;
+                calculator.data.installmentContactMethod = installmentContactMethod.value;
+            }
+        }
+
+        // Obter tela atual
+        function getCurrentScreen() {
+            if (initialScreen.classList.contains('active')) return 'initial';
+            if (discountScreen.classList.contains('active')) return 'discount';
+            if (installmentScreen.classList.contains('active')) return 'installment';
+            if (actionScreen.classList.contains('active')) return 'action';
+            return 'initial';
+        }
+
+        // Obter valores da calculadora atual
+        function getCurrentCalculatorValues() {
+            const calculator = calculators.find(c => c.id === currentCalculatorId);
+            if (!calculator) return null;
+            return calculator.data;
+        }
+
+        // Carregar calculadora
+        function loadCalculator(id) {
+            // Salvar a atual antes de trocar (apenas se for diferente)
+            if (currentCalculatorId && currentCalculatorId !== id) {
+                saveCurrentCalculator();
+            }
+            
+            const calculator = calculators.find(c => c.id === id);
+            if (!calculator) return;
+            
+            currentCalculatorId = id;
+            
+            // Limpar todos os campos
+            clearAllFields();
+            
+            // Carregar dados básicos
+            debitValueInput.value = calculator.data.debitValue || '';
+            daysOverdueInput.value = calculator.data.daysOverdue || '';
+            
+            // Carregar valores específicos da calculadora
+            currentDebitValue = calculator.data.currentDebitValue || 0;
+            currentDaysOverdue = calculator.data.currentDaysOverdue || 0;
+            currentDiscount = calculator.data.currentDiscount || 0;
+            currentInstallmentDiscount = calculator.data.currentInstallmentDiscount || 0;
+            currentFinalValue = calculator.data.currentFinalValue || 0;
+            currentNegotiatedValue = calculator.data.currentNegotiatedValue || 0;
+            currentInstallmentNegotiatedValue = calculator.data.currentInstallmentNegotiatedValue || 0;
+            
+            // Carregar valores negociados
+            if (calculator.data.negotiatedValue) {
+                negotiatedValue.value = calculator.data.negotiatedValue;
+            }
+            if (calculator.data.installmentNegotiatedValue) {
+                installmentNegotiatedValue.value = calculator.data.installmentNegotiatedValue;
+            }
+            
+            // Carregar dados específicos da tela de acionamento
+            matriculationStatus.value = calculator.data.matriculationStatus || 'ativa';
+            matriculationNumber.value = calculator.data.matriculationNumber || '';
+            if (calculator.data.documentType) {
+                const radio = document.querySelector(`input[name="document-type"][value="${calculator.data.documentType}"]`);
+                if (radio) radio.checked = true;
+            }
+            documentNumber.value = calculator.data.documentNumber || '';
+            holderName.value = calculator.data.holderName || '';
+            updatedValue.value = calculator.data.updatedValue || '';
+            dueDate.value = calculator.data.dueDate || '';
+            contactMethod.value = calculator.data.contactMethod || '';
+            
+            // Carregar dados específicos da tela de parcelamento
+            installmentMatriculationStatus.value = calculator.data.installmentMatriculationStatus || 'ativa';
+            installmentMatriculationNumber.value = calculator.data.installmentMatriculationNumber || '';
+            if (calculator.data.installmentDocumentType) {
+                const radio = document.querySelector(`input[name="installment-document-type"][value="${calculator.data.installmentDocumentType}"]`);
+                if (radio) radio.checked = true;
+            }
+            installmentDocumentNumber.value = calculator.data.installmentDocumentNumber || '';
+            installmentHolderName.value = calculator.data.installmentHolderName || '';
+            installmentUpdatedValue.value = calculator.data.installmentUpdatedValue || '';
+            entryValue.value = calculator.data.entryValue || '';
+            installmentNumber.value = calculator.data.installmentNumber || '';
+            installmentDueDate.value = calculator.data.installmentDueDate || '';
+            installmentContactMethod.value = calculator.data.installmentContactMethod || '';
+            
+            // Carregar a tela correta
+            showScreen(calculator.data.currentScreen || 'initial');
+            
+            renderCalculatorList();
+        }
+
+        // Limpar todos os campos
+        function clearAllFields() {
+            // Campos básicos
+            debitValueInput.value = '';
+            daysOverdueInput.value = '';
+            
+            // Campos da tela de desconto
+            negotiatedValue.value = '';
+            
+            // Campos da tela de acionamento
+            matriculationStatus.value = 'ativa';
+            matriculationNumber.value = '';
+            document.querySelector('input[name="document-type"][value="cpf"]').checked = true;
+            documentNumber.value = '';
+            holderName.value = '';
+            updatedValue.value = '';
+            negotiatedValue.value = '';
+            dueDate.value = '';
+            contactMethod.value = '';
+            
+            // Campos da tela de parcelamento
+            installmentUpdatedValue.value = '';
+            installmentNegotiatedValue.value = '';
+            installmentMatriculationStatus.value = 'ativa';
+            installmentMatriculationNumber.value = '';
+            document.querySelector('input[name="installment-document-type"][value="cpf"]').checked = true;
+            installmentDocumentNumber.value = '';
+            installmentHolderName.value = '';
+            entryValue.value = '';
+            installmentNumber.value = '';
+            installmentDueDate.value = '';
+            installmentContactMethod.value = '';
+        }
+
+        // Resetar variáveis globais (usado apenas ao criar nova calculadora)
+        function resetGlobalVariables() {
+            currentDebitValue = 0;
+            currentDaysOverdue = 0;
+            currentDiscount = 0;
+            currentInstallmentDiscount = 0;
+            currentFinalValue = 0;
+            currentNegotiatedValue = 0;
+            currentInstallmentNegotiatedValue = 0;
+        }
+
+        // Mostrar tela específica
+        function showScreen(screenName) {
+            initialScreen.classList.remove('active');
+            discountScreen.classList.remove('active');
+            installmentScreen.classList.remove('active');
+            actionScreen.classList.remove('active');
+            
+            switch(screenName) {
+                case 'initial':
+                    initialScreen.classList.add('active');
+                    break;
+                case 'discount':
+                    discountScreen.classList.add('active');
+                    break;
+                case 'installment':
+                    installmentScreen.classList.add('active');
+                    break;
+                case 'action':
+                    actionScreen.classList.add('active');
+                    break;
+            }
+        }
+
+        // Renderizar lista de calculadoras
+        function renderCalculatorList() {
+            calculatorList.innerHTML = '';
+            
+            calculators.forEach(calc => {
+                const item = document.createElement('div');
+                item.className = `calculator-item ${calc.id === currentCalculatorId ? 'active' : ''}`;
+                
+                item.innerHTML = `
+                    <div class="calculator-info">
+                        <div class="calculator-title">${calc.name}</div>
+                        <div class="calculator-subtitle">${calc.createdAt}</div>
+                    </div>
+                    <button class="btn-delete-calc" onclick="deleteCalculator(${calc.id})" title="Excluir">×</button>
+                `;
+                
+                // Adicionar evento de clique (exceto no botão de deletar)
+                item.querySelector('.calculator-info').addEventListener('click', () => {
+                    loadCalculator(calc.id);
+                });
+                
+                calculatorList.appendChild(item);
+            });
+        }
+
+        // Toggle sidebar (mobile)
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Criar nova calculadora
+        newCalculatorBtn.addEventListener('click', () => {
+            createNewCalculator();
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            // Criar primeira calculadora
+            createNewCalculator();
+            
+            // Focar no primeiro input
+            debitValueInput.focus();
+            
+            // Inicializar cálculos
+            updateCalculations();
+        });
+    </script>
+</body>
+</html>
+
+
