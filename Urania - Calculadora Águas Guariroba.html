@@ -1125,15 +1125,33 @@
 
         // Função para atualizar os cálculos
         function updateCalculations() {
-            const discountAmount = (currentDebitValue * currentDiscount) / 100;
-            const finalAmount = currentDebitValue - discountAmount;
+            // VERIFICAR SE ESTAMOS NA TELA CORRETA
+            if (!discountScreen.classList.contains('active')) {
+                console.log(`[updateCalculations] Ignorando - não estamos na tela de desconto`);
+                console.trace('[STACK TRACE] updateCalculations chamado de:');
+                return;
+            }
+            
+            // Usar getCalcValue para garantir que pegamos da calculadora ativa
+            const debitValue = getCalcValue('currentDebitValue');
+            const discount = getCalcValue('currentDiscount');
+            
+            console.log(`[updateCalculations] Calculadora ${currentCalculatorId} - debitValue: ${debitValue}, discount: ${discount}`);
+            
+            const discountAmount = (debitValue * discount) / 100;
+            const finalAmount = debitValue - discountAmount;
             
             finalValue.textContent = formatCurrency(finalAmount);
             discountValue.textContent = formatCurrency(discountAmount);
+            
+            // Atualizar valor final na calculadora ativa
+            setCalcValue('currentFinalValue', finalAmount);
         }
 
         // Função para mostrar tela de desconto
         function showDiscountScreen() {
+            console.log(`[showDiscountScreen] Calculadora ativa: ${currentCalculatorId}`);
+            
             // Salvar estado atual antes de navegar
             saveCurrentCalculator();
             
@@ -1142,21 +1160,35 @@
             const debitValue = parseFloat(debitValueStr) || 0;
             const daysOverdue = parseInt(daysOverdueInput.value) || 0;
             
+            console.log(`[showDiscountScreen] Valores lidos: debitValue=${debitValue}, daysOverdue=${daysOverdue}`);
+            
             if (debitValue <= 0) {
                 alert('Por favor, insira um valor de débito válido.');
                 return;
             }
             
-            // Armazenar valores
-            currentDebitValue = debitValue;
-            currentDaysOverdue = daysOverdue;
+            // Armazenar valores usando setCalcValue (garante que vai para a calculadora ativa)
+            setCalcValue('currentDebitValue', debitValue);
+            setCalcValue('currentDaysOverdue', daysOverdue);
             
             // Obter limite máximo de desconto baseado nos dias
             const maxDiscount = getMaxDiscount(daysOverdue);
             
-            // Calcular desconto sugerido baseado nos dias de atraso
-            const suggestedDiscount = calculateDiscountPercentage(daysOverdue);
-            currentDiscount = suggestedDiscount;
+            // Obter valores salvos da calculadora atual (se existir)
+            const calcValues = getCurrentCalculatorValues();
+            
+            // Se já existe um desconto salvo e os valores de débito/dias são os mesmos, usar o desconto salvo
+            let suggestedDiscount;
+            if (calcValues && calcValues.currentDiscount > 0 && 
+                calcValues.currentDebitValue === debitValue && 
+                calcValues.currentDaysOverdue === daysOverdue) {
+                suggestedDiscount = calcValues.currentDiscount;
+            } else {
+                suggestedDiscount = calculateDiscountPercentage(daysOverdue);
+            }
+            
+            // Usar setCalcValue para salvar desconto sugerido
+            setCalcValue('currentDiscount', suggestedDiscount);
             
             // Atualizar slider com os limites corretos
             discountSlider.min = 0;
@@ -1168,12 +1200,15 @@
             displayDaysOverdue.textContent = `${daysOverdue} dias`;
             discountPercentage.textContent = `${suggestedDiscount}%`;
             
-            // Atualizar cálculos
-            updateCalculations();
-            
-            // Trocar telas
+            // Trocar telas PRIMEIRO (para que a verificação de tela ativa em updateCalculations() funcione)
             initialScreen.classList.remove('active');
             discountScreen.classList.add('active');
+            
+            // Atualizar cálculos DEPOIS de trocar a tela
+            updateCalculations();
+            
+            // Salvar estado após definir todos os valores
+            saveCurrentCalculator();
         }
 
         // Função para voltar à tela inicial
@@ -1196,9 +1231,18 @@
 
         // Slider de desconto
         discountSlider.addEventListener('input', (e) => {
-            currentDiscount = parseInt(e.target.value);
-            discountPercentage.textContent = `${currentDiscount}%`;
+            const newDiscount = parseInt(e.target.value);
+            
+            console.log(`[SLIDER EVENT] Movendo slider para ${newDiscount}% na calculadora ${currentCalculatorId}`);
+            
+            // Usar setCalcValue para garantir que salvamos na calculadora ativa
+            setCalcValue('currentDiscount', newDiscount);
+            
+            discountPercentage.textContent = `${newDiscount}%`;
             updateCalculations();
+            
+            // Salvar estado da calculadora
+            saveCurrentCalculator();
         });
 
         // Botão de acionamento
@@ -1215,10 +1259,14 @@
             const calcValues = getCurrentCalculatorValues();
             if (!calcValues) return;
             
+            console.log(`[showActionScreen] Calculadora ${currentCalculatorId}:`, calcValues);
+            
             const debitValue = calcValues.currentDebitValue;
             const discount = calcValues.currentDiscount;
             const finalAmount = debitValue - (debitValue * discount / 100);
             const discountAmount = debitValue - finalAmount;
+            
+            console.log(`[showActionScreen] Valores calculados - debitValue: ${debitValue}, discount: ${discount}, finalAmount: ${finalAmount}`);
             
             // Atualizar informações do resumo
             summaryOriginalValue.textContent = formatCurrency(debitValue);
@@ -1262,14 +1310,28 @@
                 return;
             }
             
-            // Armazenar valores
-            currentDebitValue = debitValue;
-            currentDaysOverdue = daysOverdue;
+            // Armazenar valores usando setCalcValue (garante que vai para a calculadora ativa)
+            setCalcValue('currentDebitValue', debitValue);
+            setCalcValue('currentDaysOverdue', daysOverdue);
+            
+            // Obter valores salvos da calculadora atual (se existir)
+            const calcValues = getCurrentCalculatorValues();
             
             // Obter limite máximo de desconto PARCELADO baseado nos dias
             const maxInstallmentDiscount = getMaxInstallmentDiscount(daysOverdue);
-            const suggestedInstallmentDiscount = calculateInstallmentDiscountPercentage(daysOverdue);
-            currentInstallmentDiscount = suggestedInstallmentDiscount;
+            
+            // Se já existe um desconto salvo e os valores de débito/dias são os mesmos, usar o desconto salvo
+            let suggestedInstallmentDiscount;
+            if (calcValues && calcValues.currentInstallmentDiscount > 0 && 
+                calcValues.currentDebitValue === debitValue && 
+                calcValues.currentDaysOverdue === daysOverdue) {
+                suggestedInstallmentDiscount = calcValues.currentInstallmentDiscount;
+            } else {
+                suggestedInstallmentDiscount = calculateInstallmentDiscountPercentage(daysOverdue);
+            }
+            
+            // Usar setCalcValue para salvar desconto parcelado sugerido
+            setCalcValue('currentInstallmentDiscount', suggestedInstallmentDiscount);
             
             // Obter número máximo de parcelas baseado nos dias
             const maxInstallments = getMaxInstallments(daysOverdue);
@@ -1294,22 +1356,36 @@
                 installmentSelect.appendChild(option);
             }
             
-            // Atualizar cálculos
-            updateInstallmentCalculations();
-            
-            // Trocar telas
+            // Trocar telas PRIMEIRO (para que a verificação de tela ativa em updateInstallmentCalculations() funcione)
             initialScreen.classList.remove('active');
             installmentScreen.classList.add('active');
+            
+            // Atualizar cálculos DEPOIS de trocar a tela
+            updateInstallmentCalculations();
+            
+            // Salvar estado após definir todos os valores
+            saveCurrentCalculator();
         }
 
         // Função para atualizar os cálculos de parcelamento
         function updateInstallmentCalculations() {
-            const discountAmount = (currentDebitValue * currentInstallmentDiscount) / 100;
-            const finalAmount = currentDebitValue - discountAmount;
+            // VERIFICAR SE ESTAMOS NA TELA CORRETA
+            if (!installmentScreen.classList.contains('active')) {
+                console.log(`[updateInstallmentCalculations] Ignorando - não estamos na tela de parcelamento`);
+                return;
+            }
+            
+            // Usar getCalcValue para garantir que pegamos da calculadora ativa
+            const debitValue = getCalcValue('currentDebitValue');
+            const discount = getCalcValue('currentInstallmentDiscount');
+            
+            const discountAmount = (debitValue * discount) / 100;
+            const finalAmount = debitValue - discountAmount;
             const minEntry = finalAmount * 0.10;
             const suggestedEntry = finalAmount * 0.30;
             
-            currentFinalValue = finalAmount;
+            // Atualizar valor final na calculadora ativa
+            setCalcValue('currentFinalValue', finalAmount);
             
             installmentFinalValue.textContent = formatCurrency(finalAmount);
             installmentDiscountValue.textContent = formatCurrency(discountAmount);
@@ -1350,10 +1426,17 @@
 
         // Event listeners da tela de parcelamento
         installmentDiscountSlider.addEventListener('input', (e) => {
-            currentInstallmentDiscount = parseInt(e.target.value);
-            installmentDiscountText.textContent = `${currentInstallmentDiscount}%`;
-            installmentDiscountPercentage.textContent = `${currentInstallmentDiscount}%`;
+            const newDiscount = parseInt(e.target.value);
+            
+            // Usar setCalcValue para garantir que salvamos na calculadora ativa
+            setCalcValue('currentInstallmentDiscount', newDiscount);
+            
+            installmentDiscountText.textContent = `${newDiscount}%`;
+            installmentDiscountPercentage.textContent = `${newDiscount}%`;
             updateInstallmentCalculations();
+            
+            // Salvar estado da calculadora
+            saveCurrentCalculator();
         });
 
         // Formatação do valor da entrada
@@ -1416,6 +1499,7 @@
             if (!value) {
                 e.target.value = '';
                 currentInstallmentNegotiatedValue = 0;
+                saveCurrentCalculator();
                 return;
             }
             
@@ -1428,6 +1512,9 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
+            
+            // Salvar estado da calculadora
+            saveCurrentCalculator();
         });
 
         // Sincronizar input e select de parcelas
@@ -1777,6 +1864,14 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             // Converter para número (dividir por 100 para ter centavos)
             let numericValue = parseFloat(value) / 100;
             
+            // Validar limite máximo de 1 bilhão
+            const MAX_DEBIT_VALUE = 1000000000;
+            if (numericValue > MAX_DEBIT_VALUE) {
+                alert('O valor do débito não pode exceder R$ 1.000.000.000,00');
+                // Definir como o valor máximo
+                numericValue = MAX_DEBIT_VALUE;
+            }
+            
             // Formatar com separadores de milhar
             e.target.value = numericValue.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
@@ -1795,6 +1890,7 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             if (!value) {
                 e.target.value = '';
                 currentNegotiatedValue = 0;
+                saveCurrentCalculator();
                 return;
             }
             
@@ -1807,18 +1903,46 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
+            
+            // Salvar estado da calculadora
+            saveCurrentCalculator();
         });
 
         // Validação dos inputs
         debitValueInput.addEventListener('blur', (e) => {
-            if (e.target.value && parseFloat(e.target.value) < 0) {
-                e.target.value = '0.00';
+            let value = e.target.value.replace(/\./g, '').replace(',', '.');
+            let numericValue = parseFloat(value);
+            
+            if (numericValue < 0) {
+                e.target.value = '0,00';
+            } else if (numericValue > 1000000000) {
+                alert('O valor do débito não pode exceder R$ 1.000.000.000,00');
+                e.target.value = '1000000000,00';
+            }
+        });
+
+        daysOverdueInput.addEventListener('input', (e) => {
+            // Validar em tempo real enquanto digita
+            let value = parseInt(e.target.value) || 0;
+            
+            // Limite máximo de 40 anos (14600 dias)
+            const MAX_DAYS_OVERDUE = 14600;
+            
+            if (value > MAX_DAYS_OVERDUE) {
+                e.target.value = MAX_DAYS_OVERDUE.toString();
+                alert('A quantidade de dias em atraso não pode exceder 40 anos (14.600 dias)');
             }
         });
 
         daysOverdueInput.addEventListener('blur', (e) => {
-            if (e.target.value && parseInt(e.target.value) < 0) {
+            let value = parseInt(e.target.value) || 0;
+            const MAX_DAYS_OVERDUE = 14600;
+            
+            if (value < 0) {
                 e.target.value = '0';
+            } else if (value > MAX_DAYS_OVERDUE) {
+                e.target.value = MAX_DAYS_OVERDUE.toString();
+                alert('A quantidade de dias em atraso não pode exceder 40 anos (14.600 dias)');
             }
         });
 
@@ -2476,6 +2600,80 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             if (!calculator) return null;
             return calculator.data;
         }
+        
+        // Funções getter/setter para garantir acesso único à calculadora ativa
+        function getCalcValue(key) {
+            const calculator = calculators.find(c => c.id === currentCalculatorId);
+            if (!calculator) {
+                // Se não tem calculadora ativa, usar variável global como fallback
+                return getGlobalVariableValue(key);
+            }
+            const value = calculator.data[key];
+            // Atualizar variável global também para garantir sincronização
+            updateGlobalVariable(key, value);
+            return value || 0;
+        }
+        
+        function setCalcValue(key, value) {
+            const calculator = calculators.find(c => c.id === currentCalculatorId);
+            if (!calculator) {
+                console.warn(`[setCalcValue] Nenhuma calculadora ativa para salvar ${key} = ${value}`);
+                return;
+            }
+            calculator.data[key] = value;
+            // Também atualizar variável global para compatibilidade
+            updateGlobalVariable(key, value);
+            console.log(`[setCalcValue] Calculadora ${calculator.id} (${calculator.name}) - ${key} = ${value}`);
+        }
+        
+        // Função auxiliar para atualizar variável global baseada na chave
+        function updateGlobalVariable(key, value) {
+            switch(key) {
+                case 'currentDebitValue':
+                    currentDebitValue = value;
+                    break;
+                case 'currentDaysOverdue':
+                    currentDaysOverdue = value;
+                    break;
+                case 'currentDiscount':
+                    currentDiscount = value;
+                    break;
+                case 'currentInstallmentDiscount':
+                    currentInstallmentDiscount = value;
+                    break;
+                case 'currentFinalValue':
+                    currentFinalValue = value;
+                    break;
+                case 'currentNegotiatedValue':
+                    currentNegotiatedValue = value;
+                    break;
+                case 'currentInstallmentNegotiatedValue':
+                    currentInstallmentNegotiatedValue = value;
+                    break;
+            }
+        }
+        
+        // Função auxiliar para obter valor da variável global baseada na chave
+        function getGlobalVariableValue(key) {
+            switch(key) {
+                case 'currentDebitValue':
+                    return currentDebitValue;
+                case 'currentDaysOverdue':
+                    return currentDaysOverdue;
+                case 'currentDiscount':
+                    return currentDiscount;
+                case 'currentInstallmentDiscount':
+                    return currentInstallmentDiscount;
+                case 'currentFinalValue':
+                    return currentFinalValue;
+                case 'currentNegotiatedValue':
+                    return currentNegotiatedValue;
+                case 'currentInstallmentNegotiatedValue':
+                    return currentInstallmentNegotiatedValue;
+                default:
+                    return 0;
+            }
+        }
 
         // Carregar calculadora
         function loadCalculator(id) {
@@ -2513,6 +2711,22 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
                 installmentNegotiatedValue.value = calculator.data.installmentNegotiatedValue;
             }
             
+            // Atualizar sliders com os valores salvos
+            // Usar daysOverdueInput.value se currentDaysOverdue não estiver definido
+            const daysForSlider = currentDaysOverdue || parseInt(daysOverdueInput.value) || 0;
+            if (daysForSlider > 0) {
+                const maxDiscount = getMaxDiscount(daysForSlider);
+                const maxInstallmentDiscount = getMaxInstallmentDiscount(daysForSlider);
+                
+                discountSlider.min = 0;
+                discountSlider.max = maxDiscount;
+                discountSlider.value = currentDiscount;
+                
+                installmentDiscountSlider.min = 0;
+                installmentDiscountSlider.max = maxInstallmentDiscount;
+                installmentDiscountSlider.value = currentInstallmentDiscount;
+            }
+            
             // Carregar dados específicos da tela de acionamento
             matriculationStatus.value = calculator.data.matriculationStatus || 'ativa';
             matriculationNumber.value = calculator.data.matriculationNumber || '';
@@ -2541,8 +2755,46 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             installmentDueDate.value = calculator.data.installmentDueDate || '';
             installmentContactMethod.value = calculator.data.installmentContactMethod || '';
             
-            // Carregar a tela correta
-            showScreen(calculator.data.currentScreen || 'initial');
+            // Carregar a tela correta ANTES de atualizar displays
+            const savedScreen = calculator.data.currentScreen || 'initial';
+            showScreen(savedScreen);
+            
+            // Após mostrar a tela, atualizar displays de desconto
+            if (currentDiscount > 0 && savedScreen === 'discount') {
+                discountPercentage.textContent = `${currentDiscount}%`;
+                // Garantir que displayDebitValue e displayDaysOverdue estão corretos
+                if (displayDebitValue && currentDebitValue > 0) {
+                    displayDebitValue.textContent = formatCurrency(currentDebitValue);
+                }
+                if (displayDaysOverdue && currentDaysOverdue > 0) {
+                    displayDaysOverdue.textContent = `${currentDaysOverdue} dias`;
+                }
+                updateCalculations();
+            }
+            
+            if (currentInstallmentDiscount > 0 && savedScreen === 'installment') {
+                installmentDiscountPercentage.textContent = `${currentInstallmentDiscount}%`;
+                installmentDiscountText.textContent = `${currentInstallmentDiscount}%`;
+                // Garantir que installmentDebitValue e installmentDaysOverdue estão corretos
+                if (installmentDebitValue && currentDebitValue > 0) {
+                    installmentDebitValue.textContent = formatCurrency(currentDebitValue);
+                }
+                if (installmentDaysOverdue && currentDaysOverdue > 0) {
+                    installmentDaysOverdue.textContent = `${currentDaysOverdue} dias`;
+                }
+                updateInstallmentCalculations();
+            }
+            
+            // Atualizar resumo da tela de acionamento se estiver nela
+            if (savedScreen === 'action' && currentDebitValue > 0) {
+                const discount = currentDiscount;
+                const finalAmount = currentDebitValue - (currentDebitValue * discount / 100);
+                const discountAmount = currentDebitValue - finalAmount;
+                
+                summaryOriginalValue.textContent = formatCurrency(currentDebitValue);
+                summaryProposedValue.textContent = formatCurrency(finalAmount);
+                summaryDiscountValue.textContent = formatCurrency(discountAmount);
+            }
             
             renderCalculatorList();
         }
@@ -2658,8 +2910,7 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             // Focar no primeiro input
             debitValueInput.focus();
             
-            // Inicializar cálculos
-            updateCalculations();
+            // NÃO chamar updateCalculations aqui - será chamado quando o usuário navegar para a tela
         });
     </script>
 </body>
