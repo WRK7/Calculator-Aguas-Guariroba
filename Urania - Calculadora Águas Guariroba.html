@@ -593,7 +593,7 @@
             color: #888888;
         }
 
-        .btn-delete-calc {
+        .btn-edit-calc, .btn-delete-calc {
             background: #ff6b6b;
             color: white;
             border: none;
@@ -605,6 +605,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .btn-edit-calc {
+            background: #00d4ff;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit-calc:hover {
+            background: #0099cc;
         }
 
         .btn-delete-calc:hover {
@@ -972,6 +981,11 @@
                 <button class="btn btn-back" id="installment-back-button">Voltar</button>
             </div>
         </div>
+    </div>
+
+    <!-- Marca d'água discreta -->
+    <div style="position: fixed; bottom: 10px; right: 10px; font-size: 0.7rem; color: rgba(255, 255, 255, 0.3); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        Criado por Wesley Gomes para PORTES ADVOGADOS
     </div>
 
     <script>
@@ -1392,6 +1406,22 @@
             installmentMinEntry.textContent = formatCurrency(minEntry);
             installmentSuggestedEntry.textContent = formatCurrency(suggestedEntry);
             
+            // Preencher automaticamente o campo de entrada com o valor sugerido (30%)
+            if (!entryValue.value) {
+                entryValue.value = suggestedEntry.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
+            // Preencher automaticamente o campo Valor Negociado com o valor final (com desconto)
+            if (!installmentNegotiatedValue.value) {
+                installmentNegotiatedValue.value = finalAmount.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
             // Atualizar valor da parcela se houver entrada e número de parcelas
             calculateInstallmentAmount();
         }
@@ -1789,10 +1819,7 @@ ENTRADA: ${entryValueFormatted}
 NUMERO DE PARCELAS: ${numParcelas}x
 VALOR DA PARCELA: ${parcelaValueFormatted}
 VENCIMENTO: ${due}
-ENVIAR PELO WHATS/E-MAIL: ${contact}
-
----
-Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
+ENVIAR PELO WHATS/E-MAIL: ${contact}`;
         }
 
         // Botão de copiar acionamento de parcelamento
@@ -1944,6 +1971,26 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
                 e.target.value = MAX_DAYS_OVERDUE.toString();
                 alert('A quantidade de dias em atraso não pode exceder 40 anos (14.600 dias)');
             }
+        });
+
+        // Resetar descontos quando valor/dias mudarem (evita ficar travado em 95%)
+        function resetDiscountState() {
+            try {
+                setCalcValue('currentDiscount', 0);
+                setCalcValue('currentInstallmentDiscount', 0);
+            } catch (e) {
+                // fallback para variáveis globais
+                currentDiscount = 0;
+                currentInstallmentDiscount = 0;
+            }
+        }
+
+        debitValueInput.addEventListener('input', () => {
+            resetDiscountState();
+        });
+
+        daysOverdueInput.addEventListener('input', () => {
+            resetDiscountState();
         });
 
         // Enter para confirmar na tela inicial
@@ -2308,10 +2355,7 @@ DESCONTO: ${discountPercentage}%
 VALOR ATUALIZADO: ${updatedValueFormatted}
 VALOR NEGOCIADO: ${negotiatedValueFormatted}
 VENCIMENTO: ${due}
-ENVIAR PELO WHATS/E-MAIL: ${contact}
-
----
-Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
+ENVIAR PELO WHATS/E-MAIL: ${contact}`;
         }
 
         // Event listeners da tela de acionamento
@@ -2537,6 +2581,20 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
             }
             
             renderCalculatorList();
+            autoSave();
+        }
+
+        // Função para renomear calculadora
+        function renameCalculator(id) {
+            const calculator = calculators.find(c => c.id === id);
+            if (!calculator) return;
+            
+            const newName = prompt('Digite o novo nome para a calculadora:', calculator.name);
+            if (newName && newName.trim()) {
+                calculator.name = newName.trim();
+                renderCalculatorList();
+                autoSave();
+            }
         }
 
         // Salvar estado da calculadora atual
@@ -2880,7 +2938,10 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
                         <div class="calculator-title">${calc.name}</div>
                         <div class="calculator-subtitle">${calc.createdAt}</div>
                     </div>
-                    <button class="btn-delete-calc" onclick="deleteCalculator(${calc.id})" title="Excluir">×</button>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn-edit-calc" onclick="renameCalculator(${calc.id})" title="Renomear">✎</button>
+                        <button class="btn-delete-calc" onclick="deleteCalculator(${calc.id})" title="Excluir">×</button>
+                    </div>
                 `;
                 
                 // Adicionar evento de clique (exceto no botão de deletar)
@@ -2900,17 +2961,68 @@ Gerado por Urania - Calculadora e Acionador da Aguas Guariroba`;
         // Criar nova calculadora
         newCalculatorBtn.addEventListener('click', () => {
             createNewCalculator();
+            autoSave();
         });
+
+        // Funções para salvar e carregar do localStorage
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('uran_calculators', JSON.stringify(calculators));
+                localStorage.setItem('uran_current_id', currentCalculatorId);
+                localStorage.setItem('uran_counter', calculatorIdCounter);
+            } catch (e) {
+                console.error('Erro ao salvar no localStorage:', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const savedCalculators = localStorage.getItem('uran_calculators');
+                const savedId = localStorage.getItem('uran_current_id');
+                const savedCounter = localStorage.getItem('uran_counter');
+                
+                if (savedCalculators) {
+                    calculators = JSON.parse(savedCalculators);
+                    calculatorIdCounter = parseInt(savedCounter) || calculators.length + 1;
+                    currentCalculatorId = savedId ? parseInt(savedId) : calculators[0]?.id;
+                    
+                    // Sanitizar descontos salvos para forçar recálculo conforme os dias
+                    calculators.forEach(c => {
+                        if (c && c.data) {
+                            c.data.currentDiscount = 0;
+                            c.data.currentInstallmentDiscount = 0;
+                        }
+                    });
+                    
+                    if (calculators.length > 0) {
+                        loadCalculator(currentCalculatorId || calculators[0].id);
+                    } else {
+                        createNewCalculator();
+                    }
+                } else {
+                    createNewCalculator();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar do localStorage:', e);
+                createNewCalculator();
+            }
+        }
+
+        // Salvar automaticamente sempre que houver mudanças
+        function autoSave() {
+            saveToLocalStorage();
+        }
 
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
-            // Criar primeira calculadora
-            createNewCalculator();
+            // Carregar do localStorage ou criar primeira calculadora
+            loadFromLocalStorage();
             
             // Focar no primeiro input
             debitValueInput.focus();
             
-            // NÃO chamar updateCalculations aqui - será chamado quando o usuário navegar para a tela
+            // Configurar auto-save
+            setInterval(autoSave, 5000); // Salva a cada 5 segundos
         });
     </script>
 </body>
